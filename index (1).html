@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🐾 PawShare - 寵物分享交流平台</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================
+       Toast 通知容器
+       ============================================ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ============================================
+       燈箱
+       ============================================ -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightboxImg" src="" alt="圖片預覽" />
+  </div>
+
+  <!-- ============================================
+       通用 Modal
+       ============================================ -->
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal" id="modalBox">
+      <div class="modal-icon" id="modalIcon">🐾</div>
+      <h3 id="modalTitle">提示</h3>
+      <p id="modalMsg">內容</p>
+      <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <!-- 成功動畫覆蓋層 -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-animation" id="successEmoji">🐾</div>
+    <h2 id="successTitle">成功！</h2>
+    <p id="successMsg">操作完成</p>
+  </div>
+
+  <!-- ============================================
+       頁面：登入 / 註冊
+       ============================================ -->
+  <div class="page auth-page active" id="page-auth">
+    <div class="auth-container">
+      <div class="auth-logo">
+        <span class="logo-icon">🐾</span>
+        <h1>PawShare</h1>
+        <p>與全世界分享你的毛小孩日常 ✨</p>
+      </div>
+
+      <div class="auth-card">
+        <!-- 頁籤 -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login')">🔑 登入</button>
+          <button class="auth-tab" onclick="switchAuthTab('register')">🐣 註冊</button>
+        </div>
+
+        <!-- 登入表單 -->
+        <div class="form-section active" id="form-login">
+          <div class="form-group">
+            <label>使用者 ID <span>*</span></label>
+            <div class="input-wrapper">
+              <span class="input-icon">🐾</span>
+              <input class="form-input" type="text" id="loginId" placeholder="輸入您的 ID" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>密碼 <span>*</span></label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input class="form-input" type="password" id="loginPwd" placeholder="輸入密碼" />
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="doLogin()" style="margin-top:8px;">
+            🚀 登入 PawShare
+          </button>
+          <p style="text-align:center;font-size:13px;color:var(--text-light);margin-top:16px;">
+            還沒有帳號？<a href="#" onclick="switchAuthTab('register')" style="color:var(--orange-dark);font-weight:700;">立即免費加入！</a>
+          </p>
+        </div>
+
+        <!-- 註冊表單 -->
+        <div class="form-section" id="form-register">
+          <div class="form-group">
+            <label>個人頭貼</label>
+            <div class="avatar-upload">
+              <div class="avatar-preview" id="regAvatarPreview">🐾</div>
+              <label class="avatar-upload-btn" for="regAvatarInput">
+                📷 上傳頭貼<br>
+                <small style="font-weight:400;color:var(--text-light)">點擊或拖曳圖片</small>
+                <input type="file" id="regAvatarInput" accept="image/*" style="display:none"
+                       onchange="previewRegAvatar(this)" />
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>使用者 ID <span>*</span></label>
+            <div class="input-wrapper">
+              <span class="input-icon">🐾</span>
+              <input class="form-input" type="text" id="regId" placeholder="英數字，唯一識別碼" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>顯示名稱 <span>*</span></label>
+            <div class="input-wrapper">
+              <span class="input-icon">✨</span>
+              <input class="form-input" type="text" id="regName" placeholder="你的暱稱" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>密碼 <span>*</span></label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input class="form-input" type="password" id="regPwd" placeholder="至少 6 個字元" />
+            </div>
+          </div>
+          <button class="btn btn-pink" onclick="doRegister()" style="margin-top:8px;">
+            🐣 建立我的帳號
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       頁面：個人首頁
+       ============================================ -->
+  <div class="page" id="page-home">
+    <!-- 導航欄 -->
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <div class="navbar-logo" onclick="goPage('home')">
+          <span>🐾</span>
+          <h2>PawShare</h2>
+        </div>
+        <div class="navbar-search">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜尋貼文..." id="searchInputHome"
+                 oninput="handleSearch(this.value, 'home')" onfocus="openSearch('home')" />
+          <div class="search-results" id="searchResultsHome"></div>
+        </div>
+        <div class="navbar-actions">
+          <button class="nav-btn active" onclick="goPage('home')">🏠 <span>首頁</span></button>
+          <button class="nav-btn" onclick="goPage('feed')">🌈 <span>分享區</span></button>
+          <button class="nav-btn" onclick="goPage('post')">✏️ <span>發文</span></button>
+          <button class="dark-toggle" onclick="toggleDark()" id="darkToggleHome">🌙</button>
+          <div class="nav-avatar" id="navAvatarHome" onclick="goPage('home')"></div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="home-layout">
+        <!-- 個人資訊側欄 -->
+        <aside class="profile-sidebar">
+          <div class="profile-card">
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar" id="homeAvatar"></div>
+              <div class="profile-edit-btn" onclick="openEditProfile()" title="編輯個人資料">✏️</div>
+            </div>
+            <div class="profile-name" id="homeName">--</div>
+            <div class="profile-id" id="homeId">@--</div>
+            <div class="profile-stats">
+              <div class="stat-item">
+                <div class="stat-num" id="homePostCount">0</div>
+                <div class="stat-label">貼文</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-num" id="homeLikeCount">0</div>
+                <div class="stat-label">獲讚</div>
+              </div>
+            </div>
+            <div class="profile-actions">
+              <button class="btn btn-primary btn-sm" onclick="goPage('post')">✏️ 新增貼文</button>
+              <button class="btn btn-pink btn-sm" onclick="goPage('feed')">🌈 分享區</button>
+              <button class="btn btn-ghost btn-sm" onclick="doLogout()">👋 登出</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 我的貼文 -->
+        <section class="posts-section">
+          <h3>📝 我的貼文</h3>
+          <div class="posts-grid" id="homePostsGrid">
+            <div class="loading-spinner"></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       頁面：分享區
+       ============================================ -->
+  <div class="page" id="page-feed">
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <div class="navbar-logo" onclick="goPage('home')">
+          <span>🐾</span>
+          <h2>PawShare</h2>
+        </div>
+        <div class="navbar-search">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="搜尋貼文..." id="searchInputFeed"
+                 oninput="handleSearch(this.value, 'feed')" onfocus="openSearch('feed')" />
+          <div class="search-results" id="searchResultsFeed"></div>
+        </div>
+        <div class="navbar-actions">
+          <button class="nav-btn" onclick="goPage('home')">🏠 <span>首頁</span></button>
+          <button class="nav-btn active" onclick="goPage('feed')">🌈 <span>分享區</span></button>
+          <button class="nav-btn" onclick="goPage('post')">✏️ <span>發文</span></button>
+          <button class="dark-toggle" onclick="toggleDark()" id="darkToggleFeed">🌙</button>
+          <div id="feedNavUser"><!-- 由 JS 動態渲染：登入按鈕 or 頭貼 --></div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="feed-layout">
+        <main>
+          <div class="feed-header">
+            <h2>🌈 動物星球</h2>
+            <button class="btn btn-primary btn-sm" onclick="goPage('post')">✏️ 分享你的故事</button>
+          </div>
+
+          <!-- 分類篩選 -->
+          <div class="filter-tags">
+            <button class="filter-tag active" data-tag="all" onclick="filterByTag('all', this)">🌟 全部</button>
+            <button class="filter-tag" data-tag="dog" onclick="filterByTag('dog', this)">🐶 狗狗</button>
+            <button class="filter-tag" data-tag="cat" onclick="filterByTag('cat', this)">🐱 貓咪</button>
+            <button class="filter-tag" data-tag="bird" onclick="filterByTag('bird', this)">🐦 鳥類</button>
+            <button class="filter-tag" data-tag="rabbit" onclick="filterByTag('rabbit', this)">🐰 兔兔</button>
+            <button class="filter-tag" data-tag="other" onclick="filterByTag('other', this)">🦜 其他</button>
+          </div>
+
+          <div class="posts-grid" id="feedPostsGrid">
+            <div class="loading-spinner"></div>
+          </div>
+        </main>
+
+        <!-- 右側欄 -->
+        <aside class="feed-sidebar">
+          <div class="sidebar-card">
+            <h4>🔥 熱門貼文</h4>
+            <div id="trendingList"></div>
+          </div>
+          <div class="sidebar-card">
+            <h4>🐾 寵物小知識</h4>
+            <p id="petTip" style="font-size:13px;color:var(--text-medium);line-height:1.7;"></p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       頁面：發文
+       ============================================ -->
+  <div class="page" id="page-post">
+    <nav class="navbar">
+      <div class="navbar-inner">
+        <div class="navbar-logo" onclick="goPage('home')">
+          <span>🐾</span>
+          <h2>PawShare</h2>
+        </div>
+        <div class="navbar-actions">
+          <button class="nav-btn" onclick="goPage('home')">← 返回</button>
+          <button class="dark-toggle" onclick="toggleDark()">🌙</button>
+          <div class="nav-avatar" id="navAvatarPost" onclick="goPage('home')"></div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="post-page-layout">
+        <h2 style="font-family:'Pacifico',cursive;color:var(--orange-dark);margin-bottom:20px;font-size:26px;">
+          ✏️ 分享新故事
+        </h2>
+
+        <div class="post-form-card">
+          <!-- 發文者資訊 -->
+          <div class="post-form-header">
+            <div class="poster-avatar" id="posterAvatar"></div>
+            <div class="poster-info">
+              <h4 id="posterName">--</h4>
+              <p id="posterIdText">@--</p>
+            </div>
+          </div>
+
+          <!-- 寵物分類 -->
+          <div class="form-group">
+            <label>🏷️ 寵物分類</label>
+            <div class="tag-selector" id="tagSelector">
+              <button class="tag-option" data-tag="dog" onclick="selectTag(this)">🐶 狗狗</button>
+              <button class="tag-option" data-tag="cat" onclick="selectTag(this)">🐱 貓咪</button>
+              <button class="tag-option" data-tag="bird" onclick="selectTag(this)">🐦 鳥類</button>
+              <button class="tag-option" data-tag="rabbit" onclick="selectTag(this)">🐰 兔兔</button>
+              <button class="tag-option" data-tag="other" onclick="selectTag(this)">🦜 其他</button>
+            </div>
+          </div>
+
+          <!-- 標題 -->
+          <div class="form-group">
+            <label>📝 發布主題 <span style="color:var(--pink-dark)">*</span></label>
+            <div class="input-wrapper">
+              <span class="input-icon">✨</span>
+              <input class="form-input" type="text" id="postTitle" placeholder="給你的故事一個標題..." />
+            </div>
+          </div>
+
+          <!-- 內容 -->
+          <div class="form-group">
+            <label>💬 發布內容 <span style="color:var(--pink-dark)">*</span></label>
+            <textarea class="form-input" id="postContent" rows="5"
+              style="padding:12px 14px;resize:vertical;"
+              placeholder="跟大家分享你和寵物的故事... 🐾"></textarea>
+          </div>
+
+          <!-- 圖片上傳 -->
+          <div class="form-group">
+            <label>🖼️ 上傳圖片 <small style="color:var(--text-light)">（選填）</small></label>
+            <div class="image-upload-area" id="uploadArea"
+                 onclick="document.getElementById('postImgInput').click()"
+                 ondragover="handleDragOver(event)"
+                 ondragleave="handleDragLeave(event)"
+                 ondrop="handleDrop(event)">
+              <span class="upload-icon">📸</span>
+              <p>點擊選擇圖片</p>
+              <span>或直接拖曳圖片到這裡</span>
+              <input type="file" id="postImgInput" accept="image/*" multiple style="display:none"
+                     onchange="handlePostImgs(this.files)" />
+            </div>
+            <div class="image-preview-grid" id="postImgPreview"></div>
+          </div>
+
+          <!-- 操作按鈕 -->
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <button class="btn btn-ghost" onclick="goPage('home')" style="flex:1;">← 返回</button>
+            <button class="btn btn-primary" onclick="submitPost()" style="flex:2;">🚀 發布貼文</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       個人資料編輯 Modal
+       ============================================ -->
+  <div class="modal-overlay hidden" id="editProfileModal">
+    <div class="modal edit-profile-modal">
+      <h3 style="text-align:center;margin-bottom:24px;">✏️ 編輯個人資料</h3>
+
+      <div class="form-group">
+        <label>個人頭貼</label>
+        <div class="avatar-upload">
+          <div class="avatar-preview" id="editAvatarPreview">🐾</div>
+          <label class="avatar-upload-btn" for="editAvatarInput">
+            📷 更換頭貼
+            <input type="file" id="editAvatarInput" accept="image/*" style="display:none"
+                   onchange="previewEditAvatar(this)" />
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>顯示名稱</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✨</span>
+          <input class="form-input" type="text" id="editName" placeholder="新的暱稱" />
+        </div>
+      </div>
+
+      <div class="modal-actions" style="justify-content:stretch;gap:12px;">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeEditProfile()">取消</button>
+        <button class="btn btn-primary" style="flex:2" onclick="saveProfile()">儲存變更</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
